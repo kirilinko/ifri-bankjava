@@ -1,67 +1,82 @@
 package bj.ifri.tpbank.controllers;
 
+import java.util.Objects;
+import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+ 
 
-import java.util.List;
+import bj.ifri.tpbank.repositories.ClientRepository;
+import bj.ifri.tpbank.repositories.AgenceRepository;
 
-import bj.ifri.tpbank.entities.*;
-import bj.ifri.tpbank.repositories.*;
-
-
-@RestController
+@Controller
 @RequestMapping(value = "/client")
 public class WebClientController {
 	
-	@Autowired
-	private AgenceRepository agenceRepo;
 	
 	@Autowired
 	private ClientRepository clientRepo;
 	
 	@Autowired
-	private CompteRepository compteRepo;
+	private AgenceRepository agenceRepo;
 	
-	@GetMapping("/list/{agenceId}")
-	public ResponseEntity<List<Client>> findClientByAgenceId (@PathVariable("agenceId") Long agenceId) {
+	@GetMapping("/list")
+	public String  listeClient ( Model model) {
         
-		if (!agenceRepo.existsById(agenceId)) {
-			System.out.println("Not found Tutorial with id = " + agenceId);
-		
-		    }
-		
-		List<Client> clients=clientRepo.findByAgenceNumeroagence(agenceId);
-	   
-		return new ResponseEntity<> ( clients, HttpStatus.OK);
+		model.addAttribute("clients", clientRepo.findAll());
+		return "clients";
 		 
 	}
 	
-	 @GetMapping("/search/{type}/{valeur}")
-	 public ResponseEntity<List<Client>> searchClient (@PathVariable("type") String type, @PathVariable("valeur") String valeur) {
-		 
-		 List<Client> clients=null;
+	
+	@GetMapping("/agence")
+	public String  clientAgence (@RequestParam(required=false,name="agenceid") Long agenceId, Model model) {
+        
 		
-		 if(type.equals("nom")) { clients=clientRepo.findByNomContainsIgnoreCase(valeur);}
+		model.addAttribute("agences", agenceRepo.findAll());
+		
+		if (!Objects.isNull(agenceId) && agenceId!=0) 
+		{
+			model.addAttribute("clients", clientRepo.findByAgenceNumeroagence(agenceId)); 
+			}
+		else {
+			  model.addAttribute("clients", clientRepo.findAll()) ;
+			 }
+		
+	//	if (!agenceRepo.existsById(agenceId)) {
+		//	System.out.println("Not found Tutorial with id = " + agenceId);
+		
+		//    }
+		
+		return "clientagence";
 		 
-		 if(type.equals("prenom")) {clients=clientRepo.findByPrenomContainsIgnoreCase(valeur);}
+	}
+	
+ 	 @GetMapping("/search")
+ 	public String searchClient (@RequestParam("type") String type, @RequestParam("valeur") String valeur, Model model ) {
+		 
+ 		 if(type.equals("nom"))
+ 		 { 	 model.addAttribute("clients",clientRepo.findByNomContainsIgnoreCase(valeur)); }
+ 		 
+ 		 else if(type.equals("prenom")) 
+ 		 { model.addAttribute("clients",clientRepo.findByPrenomContainsIgnoreCase(valeur)); }
 		 
 		 
-		 return new ResponseEntity<> ( clients, HttpStatus.OK);
-	 }
+ 		 return  "clients";
+ 	 }
 	
 	
 	
-	  @GetMapping("/list/{bankid}/decouvert")
-	  public ResponseEntity<List<Compte>> listClientDecouvert (@PathVariable("bankid") Long bankid) {
+	//  @GetMapping("/list/{bankid}/decouvert")
+	//  public ResponseEntity<List<Compte>> listClientDecouvert (@PathVariable("bankid") Long bankid) {
 
-		  List<Compte> clients=compteRepo.findByClientAgenceBankNumerobankAndSoldeLessThan(bankid,0);
+//		  List<Compte> clients=compteRepo.findByClientAgenceBankNumerobankAndSoldeLessThan(bankid,0);
 		  
-		 return new ResponseEntity<> ( clients, HttpStatus.OK);
-	 }
+//		 return new ResponseEntity<> ( clients, HttpStatus.OK);
+//	 }
 
 }
